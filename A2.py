@@ -1,15 +1,16 @@
 import sys
 import pandas as pd
 import json
+import time
 
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
 
 def returnAllowedValues(solution,person,day):
-	possibleValues = ['M','A','E','R']
+	possibleValues = ['A','R','E','M']
 
 	if(day>0 and (solution[returnKey(person,day-1)]=='M' or solution[returnKey(person,day-1)]=='E')):		
-		possibleValues = possibleValues[1:]				#No consec mornings and no morn after evening.
+		possibleValues.remove('M')				#No consec mornings and no morn after evening.
 
 	if day%7!=6:
 		return possibleValues
@@ -29,7 +30,6 @@ def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal):
 	eThis = 0
 
 	if(person<people-1):
-
 		for thisPerson in range(person+1):
 			if(solution[returnKey(thisPerson,day)]=='M'):
 				mThis += 1
@@ -40,7 +40,6 @@ def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal):
 
 		if(mThis>mTotal or aThis>aTotal or eThis>eTotal):
 			return False
-		
 		return True
 
 	for thisPerson in range(people):
@@ -66,14 +65,22 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day):
 	for value in possibleValuesList:
 		solution[returnKey(person,day)] = value
 		if(checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal)):
-
+			solution2 = {}
 			if(person==people-1):
 				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day+1)
 			else:
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person+1,day)			
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person+1,day)	
+
+			"""
+			if(day==days-1):
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person+1,0)
+			else:
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day+1)
+			"""
 
 			if(len(solution2.keys())!=0):
 				return solution2
+		del solution[returnKey(person,day)]
 	
 	return {}
 
@@ -84,6 +91,9 @@ if __name__=='__main__':
 
 	with open("solution.json","w") as file:
 		for testCase in range(df.shape[0]):
+			st = time.time()
 			solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0)
+			en = time.time()
+			print(en-st)
 			json.dump(solution,file)
 			file.write('\n')
