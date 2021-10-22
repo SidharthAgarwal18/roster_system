@@ -3,11 +3,13 @@ import pandas as pd
 import json
 import time
 
+sys.setrecursionlimit(1000000)
+
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
 
 def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict):
-	possibleValues = ['A','R','E','M']
+	#possibleValues = ['A','R','E','M']
 
 	mThis = 0
 	aThis = 0
@@ -32,7 +34,8 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 	d = {'A':arem,'M':mrem,'E':erem,'R':rrem}
 
 	possibleValues = [k for k, v in sorted(d.items(), key=lambda item: item[1]) if v > 0]
-	#print(v,possibleValues,sep = "   ")
+	possibleValues.reverse()
+	#print("P",possibleValues,sep = "   ")
 
 	if('M' in possibleValues and day>0 and (solution[returnKey(person,day-1)]=='M' or solution[returnKey(person,day-1)]=='E')):		
 		possibleValues.remove('M')			
@@ -46,15 +49,21 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 			return possibleValues
 		temp += 1
 
-	return ['R']
-"""
-def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict):
+	if('M' in possibleValues):
+		possibleValues.remove('M')
+	if('A' in possibleValues):
+		possibleValues.remove('A')
+	if('E' in possibleValues):
+		possibleValues.remove('E')
+	return possibleValues
+
+def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict,lendomain):
 
 	mThis = 0
 	aThis = 0
 	eThis = 0
 
-	if(person<people-1):
+	if(lendomain!=0):
 		if 'M' in cntdict[day]:
 			mThis = cntdict[day]['M']
 		if 'A' in cntdict[day]:
@@ -73,8 +82,7 @@ def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntd
 	if(mThis==mTotal and aThis==aTotal and eThis==eTotal):
 		return True
 	return False
-"""
-
+	
 def returnSortedInDomain(solution,people,day):
 	newDomain = []
 	domainSize = {}
@@ -128,9 +136,9 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,c
 		else:
 			cntdict[day] = {value : 1}
 		
-		#if(checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict)):
+		if(checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict,len(domain))):
 		
-		if(True):
+		#if(True):
 			solution2 = {}
 
 			if(len(domain)==0):
