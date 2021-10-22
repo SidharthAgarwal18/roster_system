@@ -13,6 +13,7 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 	aThis = 0
 	eThis = 0
 	rThis = 0
+
 	if day in cntdict:
 		if 'M' in cntdict[day]:
 			mThis = cntdict[day]['M']
@@ -22,17 +23,19 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 			eThis = cntdict[day]['E']
 		if 'R' in cntdict[day]:
 			rThis = cntdict[day]['R']
+
 	mrem = mTotal - mThis
 	arem = aTotal - aThis
 	erem = eTotal - eThis
 	rrem = people - mTotal - aTotal - eTotal - rThis
+
 	d = {'A':arem,'M':mrem,'E':erem,'R':rrem}
 
 	possibleValues = [k for k, v in sorted(d.items(), key=lambda item: item[1]) if v > 0]
 	#print(v,possibleValues,sep = "   ")
 
 	if('M' in possibleValues and day>0 and (solution[returnKey(person,day-1)]=='M' or solution[returnKey(person,day-1)]=='E')):		
-		possibleValues.remove('M')				#No consec mornings and no morn after evening.
+		possibleValues.remove('M')			
 
 	if day%7!=6:
 		return possibleValues
@@ -44,7 +47,7 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 		temp += 1
 
 	return ['R']
-
+"""
 def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict):
 
 	mThis = 0
@@ -70,16 +73,52 @@ def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntd
 	if(mThis==mTotal and aThis==aTotal and eThis==eTotal):
 		return True
 	return False
+"""
+
+def returnSortedInDomain(solution,people,day):
+	newDomain = []
+	domainSize = {}
 
 
+	for person in range(people):
+		thisSize = 4
+		
+		if(solution[returnKey(person,day-1)]=='E' or solution[returnKey(person,day-1)]=='M'):
+			thisSize = 3
 
-def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,cntdict):
+		if(day%7==6):
+			noR = True
+			for temp in range(6):
+				if(solution[returnKey(person,day-1-temp)]=='R'):
+					noR = False
+					break
+			if (noR):
+				thisSize = 1
+
+		domainSize[person] = thisSize
+		newDomain.append(person)
+
+	def func(x):
+		return domainSize[x]
+
+	newDomain = sorted(newDomain,key = func)
+	return newDomain
+
+def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,cntdict,domain):
 
 	if(len(solution.keys())==people*days):
 		return solution
+
+	if(len(domain)==0):
+		domain = returnSortedInDomain(solution,people,day)
+	
+	person = domain[0]
+	domain = domain[1:]
+
 	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 
 	for value in possibleValuesList:
+		
 		solution[returnKey(person,day)] = value
 		if day in cntdict:
 			if value in cntdict[day]:
@@ -88,16 +127,20 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,c
 				cntdict[day][value] = 1
 		else:
 			cntdict[day] = {value : 1}
+		
 		#if(checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict)):
+		
 		if(True):
 			solution2 = {}
-			if(person==people-1):
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day+1,cntdict)
+
+			if(len(domain)==0):
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day+1,cntdict,[])
 			else:
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person+1,day,cntdict)	
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day,cntdict,domain)	
 
 			if(len(solution2.keys())!=0):
 				return solution2
+		
 		del solution[returnKey(person,day)]
 		cntdict[day][value] -= 1
 	
@@ -110,8 +153,10 @@ if __name__=='__main__':
 
 	with open("solution.json","w") as file:
 		for testCase in range(df.shape[0]):
+			domain = [i for i in range(0,df.iloc[testCase]['N'])]
+
 			st = time.time()
-			solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,{})
+			solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,{},domain)
 			en = time.time()
 			print(en-st)
 			json.dump(solution,file)
