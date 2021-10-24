@@ -8,7 +8,7 @@ sys.setrecursionlimit(1000000)
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
 
-def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict):
+def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,alpha):
 	#possibleValues = ['A','R','E','M']
 
 	mThis = 0
@@ -30,8 +30,11 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
 	arem = aTotal - aThis
 	erem = eTotal - eThis
 	rrem = people - mTotal - aTotal - eTotal - rThis
+	if(alpha > 1 and person < S):
+		mrem *= alpha
+		erem *= alpha
 
-	d = {'A':arem,'M':mrem,'E':erem,'R':rrem}
+	d = {'M':mrem,'E':erem,'A':arem,'R':rrem}
 
 	possibleValues = [k for k, v in sorted(d.items(), key=lambda item: item[1]) if v > 0]
 	possibleValues.reverse()
@@ -112,7 +115,7 @@ def returnSortedInDomain(solution,people,day):
 	newDomain = sorted(newDomain,key = func)
 	return newDomain
 
-def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,cntdict,domain):
+def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha):
 
 	if(len(solution.keys())==people*days):
 		return solution
@@ -123,7 +126,7 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,c
 	person = domain[0]
 	domain = domain[1:]
 
-	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict)
+	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,alpha)
 
 	for value in possibleValuesList:
 		
@@ -142,9 +145,9 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,c
 			solution2 = {}
 
 			if(len(domain)==0):
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day+1,cntdict,[])
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day+1,cntdict,[],alpha)
 			else:
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,0,day,cntdict,domain)	
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day,cntdict,domain,alpha)	
 
 			if(len(solution2.keys())!=0):
 				return solution2
@@ -154,6 +157,17 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,person,day,c
 	
 	return {}
 
+def recursiveBackTracking2(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha):
+	st0 = time.time()
+	en = 100000
+	alpha = 1
+	while(en-st0 < 100):
+		alpha += 0.2
+		st = time.time()
+		solution = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha)
+		en = time.time()
+	pass
+
 if __name__=='__main__':
 	csv_filename = sys.argv[1]
 	df = pd.read_csv(csv_filename)
@@ -162,9 +176,11 @@ if __name__=='__main__':
 	with open("solution.json","w") as file:
 		for testCase in range(df.shape[0]):
 			domain = [i for i in range(0,df.iloc[testCase]['N'])]
-
 			st = time.time()
-			solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,{},domain)
+			if('S' not in df.iloc[testCase]):
+				solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1)
+			else:
+				solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain)
 			en = time.time()
 			print(en-st)
 			json.dump(solution,file)
