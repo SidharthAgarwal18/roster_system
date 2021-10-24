@@ -165,6 +165,7 @@ def recursiveBackTracking2(solution,people,days,mTotal,aTotal,eTotal,S,T,person,
 		alpha += 0.2
 		st = time.time()
 		solution = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha)
+		#we will also need to make changes while assigning variable domain.. As it should also prioritize seniors..
 		en = time.time()
 	pass
 
