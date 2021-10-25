@@ -230,7 +230,7 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 	alpha = 1
 	beta = 1
 	max_score = 0
-	while(en-st0 < (T/10 + T%10) and alpha<people and beta < people):
+	while(T - (en-st0) > (T/15 + T%10) and alpha<people and beta < people):
 		solution = {}
 
 		domain = [i for i in range(0,people)]
