@@ -19,6 +19,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 			assign = solution[returnKey(nurse,day)]
 			cnt[assign] += 1
 			if(nurse < S):
+				#print(assign)
 				if(assign == 'M' or assign == 'E'):
 					score *= 2
 		if(cnt['M'] != M):
@@ -48,6 +49,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 						print("ME constraint for ",nurse,"on",day,sep = "")
 						return score
 	print("Solution Verified")
+	#print(score)
 	return score
 
 def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha):
@@ -79,6 +81,16 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdic
 	elif(person>=S and alpha>1):
 		mrem = mrem/2 + mrem%2
 		erem = erem/2 + erem%2
+
+	k = day%7
+	had_rest = 0
+	for i in range(k):
+		if(solution[returnKey(person,day-1 - i)] == 'R'):
+			had_rest = 1
+	if(had_rest == 0):
+		rrem *= 2
+	if(had_rest == 1):
+		rrem /= 2
 
 	d = {'M':mrem,'E':erem,'A':arem,'R':rrem}
 
@@ -211,7 +223,7 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 	st0 = START_TIME
 	en = time.time()
 	alpha = 1
-
+	max_score = 0
 	while(en-st0 < (T/10 + T%10) and alpha<people):
 		solution = {}
 
@@ -219,11 +231,13 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha)
 		#print(solution)
 		alpha += 0.2
-
-		if(len(solution.keys())!=0):
+		score = verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],S,T)
+		if(score > max_score and len(solution.keys())!=0):
 			file = open(outputfilename,"w")
 			json.dump(solution,file)
 			file.close()
+			max_score = score
+			print(max_score)
 		en = time.time()
 	return solution
 
@@ -262,6 +276,6 @@ if __name__=='__main__':
 		json.dump(solution,file)
 		file.close()
 	en = time.time()
-	
+
 	print(en-st)
 	print(en-START_TIME)
