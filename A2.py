@@ -52,7 +52,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 	#print(score)
 	return score
 
-def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha):
+def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha,beta):
 	#possibleValues = ['A','R','E','M']
 
 	mThis = 0
@@ -78,9 +78,9 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdic
 	if(alpha > 1 and person < S):
 		mrem *= alpha
 		erem *= alpha
-	elif(person>=S and alpha>1):
-		mrem = mrem/2 + mrem%2
-		erem = erem/2 + erem%2
+	elif(person>=S and beta>1):
+		mrem = mrem/beta
+		erem = erem/beta
 
 	k = day%7
 	had_rest = 0
@@ -177,7 +177,7 @@ def returnSortedInDomain(solution,people,day,S):
 	newDomain = sorted(newDomain,key = func)
 	return newDomain
 
-def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha):
+def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,beta):
 
 	if(len(solution.keys())==people*days):
 		return solution
@@ -188,7 +188,7 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	person = domain[0]
 	domain = domain[1:]
 
-	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha)
+	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha,beta)
 
 	for value in possibleValuesList:
 		
@@ -207,9 +207,9 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 			solution2 = {}
 
 			if(len(domain)==0):
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day+1,cntdict,[],alpha)
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day+1,cntdict,[],alpha,beta)
 			else:
-				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day,cntdict,domain,alpha)	
+				solution2 = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,0,day,cntdict,domain,alpha,beta)	
 
 			if(len(solution2.keys())!=0):
 				return solution2
@@ -219,18 +219,22 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	
 	return {}
 
-def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,START_TIME,outputfilename):
+def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,beta,START_TIME,outputfilename):
 	st0 = START_TIME
 	en = time.time()
 	alpha = 1
+	beta = 1
 	max_score = 0
-	while(en-st0 < (T/10 + T%10) and alpha<people):
+	while(en-st0 < (T/10 + T%10) and alpha<people and beta < people):
 		solution = {}
 
 		domain = [i for i in range(0,people)]
-		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha)
+		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha,beta)
 		#print(solution)
 		alpha += 0.2
+		if(alpha > 3 or alpha > people):
+			beta += 0.2
+			alpha = 1
 		score = verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],S,T)
 		if(score > max_score and len(solution.keys())!=0):
 			file = open(outputfilename,"w")
@@ -266,10 +270,10 @@ if __name__=='__main__':
 	if (not checkSolExists(df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'])):
 		solution = {}
 	elif('S' not in df.iloc[testCase]):
-		solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1)
+		solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1,1)
 		verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0)
 	else:
-		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,START_TIME,"solution.json")
+		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,1,START_TIME,"solution.json")
 	
 	if(len(solution.keys())!=0):
 		file = open("solution.json","w")
