@@ -1,0 +1,15 @@
+So we have used backtracking approach over assignments to solve this problem.
+For Part-A:
+--> We mainly focused on improving two heuristics which are of selecting the most constrained node and then assigning the least constrained value to that node.
+--> Using (person,day) as a single node, we assigned values to all people for single day to backtrack quickly on failure, on testing as well exploring the complete day leads to better results than first assigining shifts to all the days to a single person.
+1) For a single day we took the person with the smallest domain, which is calculated on basis of day alloted yesterday and rests used this week.
+2) For each person in this order, we reduce the domain if required, on basis of the shifts assigned so far that day. Now we assigned higher priority to shifts which have more number of remaining shifts for the day. For the priority to rest we used exponential function, to increase priority as we get closer to the 7th day of the week.
+--> For test case {30,21,10,5,5}, heuristic 2 reduced time from greater than 10 mins to 46 seconds and heuristic 1 further reduced time to less than 0.1s.
+
+For Part-B
+Since we have to always satisfy hard constraints
+--> For heuristic 1 we will assign senior higher priority over non-senior with equal values of domain size, rest remains same.
+Now we will use two factors alpha, beta for heuristic 2)and do a grid search over them till time allows, increasing alpha and increasing beta.
+--> newPrioritySenior(Morn/Even) = remainShiftForDay(Morn/Even)*alpha
+--> newPriorityNONSenior(Morn/Even) = remainShiftForDay(Morn/Even)/beta
+This way whenever possible senior will try morning and evening first, and vice-versa for non senior.

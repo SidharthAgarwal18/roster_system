@@ -1,7 +1,8 @@
+import time
+START_TIME = time.time()
 import sys
 import pandas as pd
 import json
-import time
 
 #sys.setrecursionlimit(1000000)
 
@@ -12,7 +13,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 	if(len(solution.keys())==0):
 		print("No sol verified")
 		return 0
-	score = 1
+	score = 0
 	for day in range(D):
 		cnt = {'E':0,'M':0,'A':0,'R':0}
 		for nurse in range(N):
@@ -21,7 +22,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 			if(nurse < S):
 				#print(assign)
 				if(assign == 'M' or assign == 'E'):
-					score *= 2
+					score += 1
 		if(cnt['M'] != M):
 			print("Day",day,":Morning constraint",sep = "")
 			return score
@@ -48,7 +49,7 @@ def verifysolandscore(solution,N,D,M,A,E,S,T):
 					if(assignlast == 'M' or assignlast == 'E'):
 						print("ME constraint for ",nurse,"on",day,sep = "")
 						return score
-	print("Solution Verified")
+	#print("Solution Verified")
 	#print(score)
 	return score
 
@@ -88,7 +89,7 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdic
 		if(solution[returnKey(person,day-1 - i)] == 'R'):
 			had_rest = 1
 	if(had_rest == 0):
-		rrem *= 2
+		rrem *= pow(1.2,day%7)
 	if(had_rest == 1):
 		rrem /= 2
 
@@ -182,6 +183,10 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	if(len(solution.keys())==people*days):
 		return solution
 
+	if(T!=0 and (T-(time.time() - START_TIME))<0.05):
+		print('Terminated in time allowed')
+		sys.exit()
+
 	if(len(domain)==0):
 		domain = returnSortedInDomain(solution,people,day,S)
 	
@@ -219,7 +224,7 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	
 	return {}
 
-def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,beta,START_TIME,outputfilename):
+def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,beta,outputfilename):
 	st0 = START_TIME
 	en = time.time()
 	alpha = 1
@@ -232,7 +237,7 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha,beta)
 		#print(solution)
 		alpha += 0.2
-		if(alpha > 3 or alpha > people):
+		if(alpha > people):
 			beta += 0.2
 			alpha = 1
 		score = verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],S,T)
@@ -255,7 +260,6 @@ def checkSolExists(N,D,M,A,E):
 	return True
 
 if __name__=='__main__':
-	START_TIME = time.time()
 	csv_filename = sys.argv[1]
 	df = pd.read_csv(csv_filename)
 
@@ -265,7 +269,7 @@ if __name__=='__main__':
 
 	testCase = 0			#Only one test case per file
 	domain = [i for i in range(0,df.iloc[testCase]['N'])]
-	st = time.time()
+	#st = time.time()
 
 	if (not checkSolExists(df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'])):
 		solution = {}
@@ -273,7 +277,7 @@ if __name__=='__main__':
 		solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1,1)
 		verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0)
 	else:
-		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,1,START_TIME,"solution.json")
+		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,1,"solution.json")
 	
 	if(len(solution.keys())!=0):
 		file = open("solution.json","w")
@@ -281,5 +285,5 @@ if __name__=='__main__':
 		file.close()
 	en = time.time()
 
-	print(en-st)
+	#print(en-st)
 	print(en-START_TIME)
