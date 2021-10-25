@@ -257,11 +257,11 @@ if __name__=='__main__':
 	else:
 		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,START_TIME,"solution.json")
 	
-
 	if(len(solution.keys())!=0):
 		file = open("solution.json","w")
 		json.dump(solution,file)
 		file.close()
-
 	en = time.time()
+	
 	print(en-st)
+	print(en-START_TIME)
