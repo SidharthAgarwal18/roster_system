@@ -8,6 +8,48 @@ import time
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
 
+def verifysolandscore(solution,N,D,M,A,E,S,T):
+	if(len(solution.keys())==0):
+		print("No sol verified")
+		return 0
+	score = 1
+	for day in range(D):
+		cnt = {'E':0,'M':0,'A':0,'R':0}
+		for nurse in range(N):
+			assign = solution[returnKey(nurse,day)]
+			cnt[assign] += 1
+			if(nurse < S):
+				if(assign == 'M' or assign == 'E'):
+					score *= 2
+		if(cnt['M'] != M):
+			print("Day",day,":Morning constraint",sep = "")
+			return score
+		if(cnt['E'] != E):
+			print("Day",day,":Evening constraint",sep = "")
+			return score
+		if(cnt['A'] != A):
+			print("Day",day,":Afternoon constraint",sep = "")
+			return score
+	for nurse in range(N):
+		for day in range(D):
+			if(day%7 == 6):
+				atleast = 0
+				for temp in range(7):
+					if(solution[returnKey(nurse,day-temp)] == 'R'):
+						atleast = 1
+				if(atleast == 0):
+					print("Nurse",nurse,"day",day,"No rest week",sep = "")
+					return score
+			if(day > 0):
+				assign = solution[returnKey(nurse,day)]
+				if(assign == 'M'):
+					assignlast = solution[returnKey(nurse,day-1)]
+					if(assignlast == 'M' or assignlast == 'E'):
+						print("ME constraint for ",nurse,"on",day,sep = "")
+						return score
+	print("Solution Verified")
+	return score
+
 def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha):
 	#possibleValues = ['A','R','E','M']
 
@@ -211,9 +253,11 @@ if __name__=='__main__':
 		solution = {}
 	elif('S' not in df.iloc[testCase]):
 		solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1)
+		verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0)
 	else:
 		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,START_TIME,"solution.json")
 	
+
 	if(len(solution.keys())!=0):
 		file = open("solution.json","w")
 		json.dump(solution,file)
