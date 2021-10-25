@@ -3,12 +3,12 @@ import pandas as pd
 import json
 import time
 
-sys.setrecursionlimit(1000000)
+#sys.setrecursionlimit(1000000)
 
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
 
-def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,alpha):
+def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha):
 	#possibleValues = ['A','R','E','M']
 
 	mThis = 0
@@ -30,9 +30,13 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,
 	arem = aTotal - aThis
 	erem = eTotal - eThis
 	rrem = people - mTotal - aTotal - eTotal - rThis
+
 	if(alpha > 1 and person < S):
 		mrem *= alpha
 		erem *= alpha
+	elif(person>=S and alpha>1):
+		mrem = mrem/2 + mrem%2
+		erem = erem/2 + erem%2
 
 	d = {'M':mrem,'E':erem,'A':arem,'R':rrem}
 
@@ -58,6 +62,7 @@ def returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,
 		possibleValues.remove('A')
 	if('E' in possibleValues):
 		possibleValues.remove('E')
+
 	return possibleValues
 
 def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntdict,lendomain):
@@ -86,7 +91,7 @@ def checkDayConstraint(solution,person,day,people,days,mTotal,aTotal,eTotal,cntd
 		return True
 	return False
 	
-def returnSortedInDomain(solution,people,day):
+def returnSortedInDomain(solution,people,day,S):
 	newDomain = []
 	domainSize = {}
 
@@ -110,7 +115,10 @@ def returnSortedInDomain(solution,people,day):
 		newDomain.append(person)
 
 	def func(x):
-		return domainSize[x]
+		if x<S:
+			return domainSize[x] - 0.5
+		else:
+			return domainSize[x]
 
 	newDomain = sorted(newDomain,key = func)
 	return newDomain
@@ -121,12 +129,12 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 		return solution
 
 	if(len(domain)==0):
-		domain = returnSortedInDomain(solution,people,day)
+		domain = returnSortedInDomain(solution,people,day,S)
 	
 	person = domain[0]
 	domain = domain[1:]
 
-	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,cntdict,alpha)
+	possibleValuesList = returnAllowedValues(solution,person,day,people,mTotal,aTotal,eTotal,S,cntdict,alpha)
 
 	for value in possibleValuesList:
 		
@@ -157,32 +165,59 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	
 	return {}
 
-def recursiveBackTracking2(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha):
-	st0 = time.time()
-	en = 100000
+def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha,START_TIME,outputfilename):
+	st0 = START_TIME
+	en = time.time()
 	alpha = 1
-	while(en-st0 < 100):
+
+	while(en-st0 < (T/10 + T%10) and alpha<people):
+		solution = {}
+
+		domain = [i for i in range(0,people)]
+		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha)
+		#print(solution)
 		alpha += 0.2
-		st = time.time()
-		solution = recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,day,cntdict,domain,alpha)
-		#we will also need to make changes while assigning variable domain.. As it should also prioritize seniors..
+
+		if(len(solution.keys())!=0):
+			file = open(outputfilename,"w")
+			json.dump(solution,file)
+			file.close()
 		en = time.time()
-	pass
+	return solution
+
+def checkSolExists(N,D,M,A,E):
+	if(M+A+E>N):
+		return False
+	if(D>6 and (N-M-A-E)*7<N):
+		return False
+	if((N-M-E)<M):				#No possible assignment for M on the next day
+		return False
+	return True
 
 if __name__=='__main__':
+	START_TIME = time.time()
 	csv_filename = sys.argv[1]
 	df = pd.read_csv(csv_filename)
-	#print(df.iloc[0]['N'])
 
-	with open("solution.json","w") as file:
-		for testCase in range(df.shape[0]):
-			domain = [i for i in range(0,df.iloc[testCase]['N'])]
-			st = time.time()
-			if('S' not in df.iloc[testCase]):
-				solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1)
-			else:
-				solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain)
-			en = time.time()
-			print(en-st)
-			json.dump(solution,file)
-			file.write('\n')
+	file = open("solution.json","w")
+	json.dump({},file)				# In case of non convergence
+	file.close()
+
+	testCase = 0			#Only one test case per file
+	domain = [i for i in range(0,df.iloc[testCase]['N'])]
+	st = time.time()
+
+	if (not checkSolExists(df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'])):
+		solution = {}
+	elif('S' not in df.iloc[testCase]):
+		solution = recursiveBackTracking({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],0,0,0,0,{},domain,1)
+	else:
+		solution = recursiveBackTracking2({},df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],df.iloc[testCase]['S'],df.iloc[testCase]['T'],0,0,{},domain,1,START_TIME,"solution.json")
+	
+	if(len(solution.keys())!=0):
+		file = open("solution.json","w")
+		json.dump(solution,file)
+		file.close()
+
+	en = time.time()
+	print(en-st)
