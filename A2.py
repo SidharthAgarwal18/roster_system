@@ -183,7 +183,7 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	if(len(solution.keys())==people*days):
 		return solution
 
-	if(T!=0 and (T-(time.time() - START_TIME))<0.05):
+	if(T!=0 and (T-(time.time() - START_TIME))<0.002):
 		print('Terminated in time allowed')
 		sys.exit()
 
@@ -230,7 +230,7 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 	alpha = 1
 	beta = 1
 	max_score = 0
-	while(T - (en-st0) > (T/15 + T%10) and alpha<people and beta < people):
+	while(T - (en-st0) > 0.02 and alpha<people and beta < people):
 		solution = {}
 
 		domain = [i for i in range(0,people)]
