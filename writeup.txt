@@ -11,7 +11,7 @@ For Part-A:
 For Part-B
 Since we have to always satisfy hard constraints
 --> For heuristic 1 we will assign senior higher priority over non-senior with equal values of domain size, rest remains same.
-Now we will use two factors alpha, beta for heuristic 2) and do a grid search over them till time allows, increasing alpha and increasing beta.
+Now we will use two factors alpha, beta for heuristic 2) and do a grid search over them till time allows, increasing alpha and increasing beta exponentially...
 --> newPrioritySenior(Morn/Even) = remainShiftForDay(Morn/Even)*alpha
 --> newPriorityNONSenior(Morn/Even) = remainShiftForDay(Morn/Even)/beta
 This way whenever possible senior will try morning and evening first, and vice-versa for non senior.

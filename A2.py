@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 import json
 
-#sys.setrecursionlimit(1000000)
+sys.setrecursionlimit(1000000)
 
 def returnKey(person,day):
 	return "N"+str(person)+"_"+str(day)
@@ -183,7 +183,7 @@ def recursiveBackTracking(solution,people,days,mTotal,aTotal,eTotal,S,T,person,d
 	if(len(solution.keys())==people*days):
 		return solution
 
-	if(T!=0 and (T-(time.time() - START_TIME))<0.002):
+	if(T!=0 and (T-(time.time() - START_TIME))<0.005):
 		print('Terminated in time allowed')
 		sys.exit()
 
@@ -230,15 +230,15 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 	alpha = 1
 	beta = 1
 	max_score = 0
-	while(T - (en-st0) > 0.02 and alpha<people and beta < people):
+	while(T - (en-st0) > 0.01 and alpha<people and beta < people):
 		solution = {}
 
 		domain = [i for i in range(0,people)]
 		solution = recursiveBackTracking({},people,days,mTotal,aTotal,eTotal,S,T,0,0,{},domain,alpha,beta)
 		#print(solution)
-		alpha += 0.2
+		alpha  = alpha*(1.05)
 		if(alpha > people):
-			beta += 0.2
+			beta = beta*(1.1)
 			alpha = 1
 		score = verifysolandscore(solution,df.iloc[testCase]['N'],df.iloc[testCase]['D'],df.iloc[testCase]['m'],df.iloc[testCase]['a'],df.iloc[testCase]['e'],S,T)
 		if(score > max_score and len(solution.keys())!=0):
@@ -246,7 +246,7 @@ def recursiveBackTracking2(solutionInit,people,days,mTotal,aTotal,eTotal,S,T,per
 			json.dump(solution,file)
 			file.close()
 			max_score = score
-			print(max_score)
+			#print(max_score)
 		en = time.time()
 	return solution
 
